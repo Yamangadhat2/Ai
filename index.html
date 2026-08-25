@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>إزالة خلفية الصور بالذكاء الاصطناعي</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;600;700;800&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --primary: #6366f1;
+      --primary-hover: #4f46e5;
+      --bg: #0b0f19;
+      --card-bg: #1e293b;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --border: #334155;
+      --success: #10b981;
+      --danger: #ef4444;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Tajawal', -apple-system, BlinkMacSystemFont, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 1.5rem 1rem;
+    }
+
+    .container {
+      max-width: 800px;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.25rem;
+    }
+
+    header {
+      text-align: center;
+    }
+
+    header h1 {
+      font-size: 1.9rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #818cf8, #c084fc);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 0.3rem;
+    }
+
+    header p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+
+    /* منطقة رفع الصورة */
+    .drop-zone {
+      width: 100%;
+      background-color: var(--card-bg);
+      border: 2px dashed var(--border);
+      border-radius: 1.25rem;
+      padding: 2.5rem 1.5rem;
+      text-align: center;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.9rem;
+      transition: all 0.2s ease;
+    }
+
+    .drop-zone:active, .drop-zone.drag-over {
+      border-color: var(--primary);
+      background-color: #1e293b99;
+    }
+
+    .drop-zone svg {
+      width: 50px;
+      height: 50px;
+      stroke: #818cf8;
+    }
+
+    .drop-zone h3 {
+      font-size: 1.15rem;
+    }
+
+    .drop-zone p {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+
+    .btn {
+      background-color: var(--primary);
+      color: white;
+      padding: 0.75rem 1.5rem;
+      border-radius: 0.75rem;
+      border: none;
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      min-height: 48px;
+    }
+
+    .btn:active {
+      opacity: 0.9;
+      transform: scale(0.98);
+    }
+
+    .btn-download {
+      background-color: var(--success);
+    }
+
+    .btn-secondary {
+      background-color: #334155;
+    }
+
+    input[type="file"] {
+      display: none;
+    }
+
+    /* كرت المتابعة والمعالجة */
+    .processing-card {
+      display: none;
+      width: 100%;
+      background: var(--card-bg);
+      padding: 1.5rem;
+      border-radius: 1.25rem;
+      border: 1px solid var(--border);
+      flex-direction: column;
+      gap: 1.2rem;
+    }
+
+    /* معاينة الصورة المرفوعة داخل الموقع */
+    .upload-preview {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      background: #0f172a;
+      padding: 0.75rem;
+      border-radius: 0.75rem;
+      border: 1px solid var(--border);
+    }
+
+    .upload-preview img {
+      width: 65px;
+      height: 65px;
+      object-fit: cover;
+      border-radius: 0.5rem;
+    }
+
+    .preview-info {
+      flex: 1;
+      text-align: right;
+      overflow: hidden;
+    }
+
+    .preview-info .badge {
+      display: inline-block;
+      background: rgba(16, 185, 129, 0.2);
+      color: var(--success);
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 0.2rem 0.5rem;
+      border-radius: 0.3rem;
+      margin-bottom: 0.2rem;
+    }
+
+    .preview-info h4 {
+      font-size: 0.9rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .preview-info p {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    /* شريط التقدم والنسبة */
+    .progress-section {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .progress-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.9rem;
+    }
+
+    .progress-title {
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .progress-percent {
+      font-weight: 800;
+      color: #818cf8;
+      direction: ltr;
+    }
+
+    .progress-bar-bg {
+      width: 100%;
+      height: 10px;
+      background: #0f172a;
+      border-radius: 999px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #6366f1, #a855f7);
+      border-radius: 999px;
+      transition: width 0.25s ease;
+    }
+
+    .status-msg {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .status-msg .dot {
+      width: 8px;
+      height: 8px;
+      background: #818cf8;
+      border-radius: 50%;
+      animation: pulse 1.2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.8); }
+    }
+
+    /* صندوق الخطأ */
+    .error-box {
+      display: none;
+      width: 100%;
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid var(--danger);
+      color: #fca5a5;
+      padding: 1rem;
+      border-radius: 0.75rem;
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+
+    /* قسم عرض النتائج */
+    .result-section {
+      display: none;
+      width: 100%;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.25rem;
+    }
+
+    .preview-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      width: 100%;
+    }
+
+    @media (max-width: 600px) {
+      .preview-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .image-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 1rem;
+      padding: 0.75rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .image-card h4 {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+
+    .img-wrapper {
+      width: 100%;
+      height: 240px;
+      border-radius: 0.5rem;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .img-wrapper img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      -webkit-touch-callout: default;
+    }
+
+    .transparent-pattern {
+      background-color: #232f3e;
+      background-image: 
+        linear-gradient(45deg, #18222d 25%, transparent 25%), 
+        linear-gradient(-45deg, #18222d 25%, transparent 25%), 
+        linear-gradient(45deg, transparent 75%, #18222d 75%), 
+        linear-gradient(-45deg, transparent 75%, #18222d 75%);
+      background-size: 16px 16px;
+      background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
+    }
+
+    .actions {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      width: 100%;
+      max-width: 400px;
+    }
+
+    .actions .btn {
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <h1>تفريغ الصور بالذكاء الاصطناعي</h1>
+      <p>ارفع صورتك لمشاهدة المعالجة والتحميل خطوة بخطوة</p>
+    </header>
+
+    <!-- تنبيه الخطأ في حال حدوث مشكلة -->
+    <div class="error-box" id="errorBox"></div>
+
+    <!-- صندوق رفع الصورة -->
+    <label class="drop-zone" id="dropZone" for="fileInput">
+      <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+      </svg>
+      <h3>اضغط لاختيار صورة من هاتفك أو جهازك</h3>
+      <p>يدعم JPG و PNG و WebP وجميع أنواع الصور</p>
+      <span class="btn" style="pointer-events: none;">اختيار صورة</span>
+    </label>
+    <input type="file" id="fileInput" accept="image/*">
+
+    <!-- شاشة تقدم المعالجة وتحميل النموذج -->
+    <div class="processing-card" id="processingCard">
+      <!-- معاينة فورية للصورة التي تم اختيارها -->
+      <div class="upload-preview">
+        <img id="thumbImg" src="" alt="معاينة">
+        <div class="preview-info">
+          <span class="badge">✓ تم رفع الصورة للموقع</span>
+          <h4 id="previewFileName">image.jpg</h4>
+          <p id="previewFileSize">0 KB</p>
+        </div>
+      </div>
+
+      <!-- شريط النسبة والتقدم -->
+      <div class="progress-section">
+        <div class="progress-header">
+          <span class="progress-title" id="stageTitle">جاري تحميل ملفات الذكاء الاصطناعي...</span>
+          <span class="progress-percent" id="percentText">0%</span>
+        </div>
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill" id="progressBar"></div>
+        </div>
+        <div class="status-msg">
+          <div class="dot"></div>
+          <span id="statusDetails">يتم تنزيل النموذج إلى المتصفح للعمل بدون سيرفرات</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- قسم النتيجة والتحميل -->
+    <div class="result-section" id="resultSection">
+      <div class="preview-grid">
+        <div class="image-card">
+          <h4>الصورة الأصلية</h4>
+          <div class="img-wrapper">
+            <img id="originalImg" src="" alt="الأصلية">
+          </div>
+        </div>
+        <div class="image-card">
+          <h4>النتيجة (خلفية شفافة)</h4>
+          <div class="img-wrapper transparent-pattern">
+            <img id="resultImg" src="" alt="النتيجة">
+          </div>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="btn btn-download" id="saveBtn">
+          <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+          </svg>
+          <span id="saveBtnText">حفظ / تنزيل الصورة (PNG)</span>
+        </button>
+        <button class="btn btn-secondary" id="resetBtn">تفريغ صورة أخرى</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- تشغيل مكتبة الذكاء الاصطناعي مع تتبع النسب والأخطاء -->
+  <script type="module">
+    import imglyRemoveBackground from 'https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.5.8/+esm';
+
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const processingCard = document.getElementById('processingCard');
+    const resultSection = document.getElementById('resultSection');
+    const errorBox = document.getElementById('errorBox');
+
+    const thumbImg = document.getElementById('thumbImg');
+    const previewFileName = document.getElementById('previewFileName');
+    const previewFileSize = document.getElementById('previewFileSize');
+
+    const originalImg = document.getElementById('originalImg');
+    const resultImg = document.getElementById('resultImg');
+
+    const stageTitle = document.getElementById('stageTitle');
+    const percentText = document.getElementById('percentText');
+    const progressBar = document.getElementById('progressBar');
+    const statusDetails = document.getElementById('statusDetails');
+
+    const saveBtn = document.getElementById('saveBtn');
+    const resetBtn = document.getElementById('resetBtn');
+
+    let processedBlob = null;
+    let currentFileName = 'image';
+
+    fileInput.addEventListener('change', (e) => {
+      if (e.target.files && e.target.files.length > 0) {
+        handleUpload(e.target.files[0]);
+      }
+    });
+
+    function formatSize(bytes) {
+      if (!bytes) return '0 KB';
+      const k = 1024;
+      const sizes = ['Bytes', 'KB', 'MB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+    }
+
+    function showError(msg) {
+      errorBox.innerHTML = msg;
+      errorBox.style.display = 'block';
+      processingCard.style.display = 'none';
+      dropZone.style.display = 'flex';
+    }
+
+    async function handleUpload(file) {
+      errorBox.style.display = 'none';
+
+      if (!file.type.startsWith('image/')) {
+        showError('الرجاء اختيار ملف صورة صحيح (JPG, PNG, WebP).');
+        return;
+      }
+
+      currentFileName = file.name ? file.name.substring(0, file.name.lastIndexOf('.')) : 'image';
+
+      // 1. إظهار الصورة فوراً داخل الموقع وتحديث البيانات
+      const previewUrl = URL.createObjectURL(file);
+      thumbImg.src = previewUrl;
+      originalImg.src = previewUrl;
+      previewFileName.innerText = file.name || 'image.jpg';
+      previewFileSize.innerText = formatSize(file.size);
+
+      // تبديل الواجهة لعرض شاشة التقدم
+      dropZone.style.display = 'none';
+      resultSection.style.display = 'none';
+      processingCard.style.display = 'flex';
+
+      progressBar.style.width = '0%';
+      percentText.innerText = '0%';
+      stageTitle.innerText = 'جاري الاتصال وتحميل النموذج...';
+      statusDetails.innerText = 'يتم تحضير محرك الذكاء الاصطناعي';
+
+      try {
+        // إعدادات تتبع التحميل والمعالجة
+        const config = {
+          progress: (key, current, total) => {
+            if (total > 0) {
+              const pct = Math.min(100, Math.round((current / total) * 100));
+              progressBar.style.width = `${pct}%`;
+              percentText.innerText = `${pct}%`;
+
+              if (key.includes('fetch')) {
+                stageTitle.innerText = 'تحميل ملف الذكاء الاصطناعي...';
+                statusDetails.innerText = `تم تحميل ${formatSize(current)} من أصل ${formatSize(total)}`;
+              } else {
+                stageTitle.innerText = 'جاري قص وتفريغ الخلفية...';
+                statusDetails.innerText = `الذكاء الاصطناعي يعزل العناصر: ${pct}%`;
+              }
+            } else {
+              stageTitle.innerText = 'جاري معالجة الصورة...';
+              statusDetails.innerText = 'لحظات فقط لاكتمال تفريغ الصورة';
+              progressBar.style.width = '80%';
+              percentText.innerText = '80%';
+            }
+          }
+        };
+
+        // تشغيل الذكاء الاصطناعي
+        const blob = await imglyRemoveBackground(file, config);
+
+        // اكتمال العملية
+        progressBar.style.width = '100%';
+        percentText.innerText = '100%';
+        stageTitle.innerText = 'تم التفريغ بنجاح!';
+        statusDetails.innerText = 'تم تجهيز الصورة الشفافة للتحميل';
+
+        processedBlob = blob;
+        resultImg.src = URL.createObjectURL(blob);
+
+        setTimeout(() => {
+          processingCard.style.display = 'none';
+          resultSection.style.display = 'flex';
+        }, 500);
+
+      } catch (err) {
+        console.error("Error details:", err);
+        let errorMsg = 'حدث خطأ أثناء المعالجة: ';
+        
+        // التحقق إن كان المستخدم فتح الملف مباشرة بدون سيرفر
+        if (window.location.protocol === 'file:') {
+          errorMsg += '<br>⚠️ <b>تنبيه مهم:</b> متصفحات الويب تمنع تشغيل ملفات الذكاء الاصطناعي عند النقر المزدوج على الملف (file://). يرجى تشغيل الملف عبر (Live Server في VS Code) أو رفعه على استضافة مجانية مثل Vercel أو Netlify أو GitHub Pages.';
+        } else {
+          errorMsg += err.message || 'يرجى التحقق من اتصال الإنترنت وتجربة صورة أخرى.';
+        }
+        
+        showError(errorMsg);
+      }
+    }
+
+    // زر الحفظ والمشاركة
+    saveBtn.addEventListener('click', async () => {
+      if (!processedBlob) return;
+      const fileName = `${currentFileName}_no_bg.png`;
+      const file = new File([processedBlob], fileName, { type: 'image/png' });
+
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({
+            files: [file],
+            title: 'صورتك بدون خلفية',
+          });
+          return;
+        } catch (e) {
+          if (e.name !== 'AbortError') directDownload(fileName);
+        }
+      } else {
+        directDownload(fileName);
+      }
+    });
+
+    function directDownload(fileName) {
+      const url = URL.createObjectURL(processedBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+
+    resetBtn.addEventListener('click', () => {
+      fileInput.value = '';
+      resultSection.style.display = 'none';
+      dropZone.style.display = 'flex';
+      errorBox.style.display = 'none';
+    });
+  </script>
+</body>
+</html>
